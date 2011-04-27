@@ -9,6 +9,6 @@ s = TCPSocket.open("localhost", port)
 
 while gets
   s.write($_)
-  print(s.gets)
+  #print(s.gets)
 end
 s.close
