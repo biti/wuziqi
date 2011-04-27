@@ -12,6 +12,8 @@ class ChatServer
   def run
 	  while true
 	    res = select( @descriptors, nil, nil, nil )
+			puts res.class
+			puts res.inspect
 
 	    if res != nil then
 	      # Iterate through the tagged read descriptors

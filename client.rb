@@ -1,12 +1,14 @@
 require "socket"
 
-ip = 'localhost'
-port = 2000
+require "socket"
 
-socket = TCPSocket.open(ip, port)
+port = ARGV.size > 0 ? ARGV.shift : 4444
+print port, "\n"
 
-while line = socket.gets
-  puts line
+s = TCPSocket.open("localhost", port)
+
+while gets
+  s.write($_)
+  print(s.gets)
 end
-
-socket.close
+s.close
