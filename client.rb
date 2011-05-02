@@ -1,14 +1,36 @@
 require "socket"
 
-require "socket"
+class Client
 
-port = ARGV.size > 0 ? ARGV.shift : 4444
-print port, "\n"
+  def initialize(host, port)
+	  @socket = TCPSocket.open(host, port)
+	end
 
-s = TCPSocket.open("localhost", port)
+  def send(message)
+    @socket.write(message)
+	end
 
-while gets
-  s.write($_)
-  #print(s.gets)
+	def listen_to_server
+	  Thread.new do  
+      while line = @socket.gets
+			  yield line
+			end
+		end
+	end
+
+  def close
+    @socket.close
+	end
 end
-s.close
+
+if __FILE__ == $0
+  client = Client.new('localhost', 4444)
+	client.listen_to_server do |message|
+    puts message
+	end
+
+	while message = gets
+	  client.send(message)
+	end
+
+end

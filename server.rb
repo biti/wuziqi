@@ -1,70 +1,73 @@
-require "socket"
+require 'rubygems'
+require 'socket'
+include Socket::Constants
 
 class ChatServer
-  def initialize( host, port )
-    @descriptors  = []
-    @serverSocket = TCPServer.new( host, port )
-    @serverSocket.setsockopt( Socket::SOL_SOCKET, Socket::SO_REUSEADDR, 1 )
-    printf("Chatserver started on port %d\n", port)
-    @descriptors << @serverSocket 
-  end 
 
-  def run
-	  while true
-	    res = select( @descriptors, nil, nil, nil )
-			puts res.class
-			puts res.inspect
+  def initialize
+    @reading = Array.new
+    @writing = Array.new
+    @clients = Hash.new
+  end
 
-	    if res != nil then
-	      # Iterate through the tagged read descriptors
-	      for sock in res[0]
-	        # Received a connect to the server (listening) socket
-	        if sock == @serverSocket then
-	          accept_new_connection
-	        else
-	          # Received something on a client socket
-	          if sock.eof? then
-	            str = sprintf("Client left %s:%s\n",
-          	  sock.peeraddr[2], sock.peeraddr[1])
-         	    broadcast_string( str, sock )
-	            sock.close
-	            @descriptors.delete(sock)
-	          else
-	            str = sprintf("[%s|%s]: %s",
-        	    sock.peeraddr[2], sock.peeraddr[1], sock.gets())
-         	    broadcast_string( str, sock )
-	          end
-	        end
-	      end
-	    end
-	  end
+  def start(port)
+    @server_socket = TCPServer.new('localhost', port)
+    @reading.push(@server_socket)
+    run_acceptor
   end
 
   private
-	def broadcast_string( str, omit_sock )
-	  @descriptors.each do |clisock|
-	    if clisock != @serverSocket && clisock != omit_sock
-	      clisock.write(str)
-	    end
-	  end
 
-  	print(str)
-	end
+  def add_client
+    socket = @server_socket.accept_nonblock
+    @reading.push(socket)
 
-  def accept_new_connection
-    newsock = @serverSocket.accept
-    @descriptors.push( newsock )
-    newsock.write("You're connected to the Ruby chatserver\n")
-    str = sprintf("Client joined %s:%s\n",
-    newsock.peeraddr[2], newsock.peeraddr[1])
-    broadcast_string( str, newsock )
+    @clients[socket] = Fiber.new do |message|
+      loop {
+        if message.nil?
+          chat = socket.gets
+          socket.flush
+          message = Fiber.yield(chat)
+        else
+          socket.puts(message)
+          socket.flush
+          message = Fiber.yield
+        end
+      }
+    end
+    puts "client #{socket} connected"
+    return @clients[socket]
   end
 
-end 
+  def broadcast(message)
+    @clients.each_pair do |key, value|
+      puts "invoking client #{key}"
+      value.resume(message)
+    end
+  end
 
-if __FILE__ == $0
-  myChatServer = ChatServer.new( 'localhost', 2000 ).run
+  def run_acceptor
+    loop do
+      puts "current clients: #{@clients.length}"
+      readable, writable = IO.select(@reading, @writing)
+
+      readable.each do |socket|
+        if socket == @server_socket
+          add_client
+        else
+          client = @clients[socket]
+          message = client.resume
+          puts "client #{socket} sent: #{message}"
+          broadcast(message)
+        end 
+      end
+    end
+  end
 end
 
+if __FILE__ == $0
+  server = ChatServer.new
+  server.start(4444)
+end
 
 
