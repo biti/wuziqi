@@ -13,6 +13,24 @@ class ChatServer
     @reading.push(@server_socket)
   end
 
+  def run_acceptor
+    loop do
+      puts "current clients: #{@clients.length}"
+      readable, writable = IO.select(@reading, @writing)
+
+      readable.each do |socket|
+        if socket == @server_socket
+          add_client
+        else
+          client = @clients[socket]
+          message = client.resume
+          puts "client #{socket} sent: #{message}"
+					yield message
+          broadcast(message)
+        end 
+      end
+    end
+  end
 
   private
 
@@ -44,24 +62,7 @@ class ChatServer
     end
   end
 
-  def run_acceptor
-    loop do
-      puts "current clients: #{@clients.length}"
-      readable, writable = IO.select(@reading, @writing)
 
-      readable.each do |socket|
-        if socket == @server_socket
-          add_client
-        else
-          client = @clients[socket]
-          message = client.resume
-          puts "client #{socket} sent: #{message}"
-					yield message
-          broadcast(message)
-        end 
-      end
-    end
-  end
 end
 
 class Wuziqi
@@ -69,6 +70,7 @@ class Wuziqi
 	B = :B
 
   def initialize
+	  @eyes = {}
 	  @eyes[A] = []
 	  @eyes[B] = []
 	  @row_number	= 20
