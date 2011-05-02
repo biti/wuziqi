@@ -4,17 +4,15 @@ include Socket::Constants
 
 class ChatServer
 
-  def initialize
+  def initialize(port)
     @reading = Array.new
     @writing = Array.new
     @clients = Hash.new
-  end
 
-  def start(port)
     @server_socket = TCPServer.new('localhost', port)
     @reading.push(@server_socket)
-    run_acceptor
   end
+
 
   private
 
@@ -58,6 +56,7 @@ class ChatServer
           client = @clients[socket]
           message = client.resume
           puts "client #{socket} sent: #{message}"
+					yield message
           broadcast(message)
         end 
       end
@@ -65,9 +64,115 @@ class ChatServer
   end
 end
 
+class Wuziqi
+  A = :A
+	B = :B
+
+  def initialize
+	  @eyes[A] = []
+	  @eyes[B] = []
+	  @row_number	= 20
+	end
+
+  # 思路：寻找有没有连续的5个棋子。20个行，20个列，还有斜行24个，共找64次
+	def win?(role)
+
+	  # 行
+   	(1..20).each do |i|
+		  count = 0
+		  (1..20).each do |j|
+			  eye = @eyes[role].find{|e| e.x == i and e.y == j}
+				if eye and eye.used?(role)
+				  count += 1
+				else
+				  count = 0
+				end
+
+			  if count >= 5
+				  win_exit!
+			  end
+			end
+		end
+		   
+	  # 列
+  	(1..20).each do |j|
+		  count = 0
+		  (1..20).each do |i|
+			  eye = @eyes[role].find{|e| e.x == i and e.y == j}
+				if eye and eye.used?(role)
+				  count += 1
+				else
+				  count = 0
+				end
+
+			  if count >= 5
+				  win_exit!
+			  end
+			end
+		end
+		
+		(5..20).each do |j|
+		  i = 1 
+		  count = 0
+		  while true 
+			  begin
+  		  	eye = @eyes[role].find{|e| e.x == i and e.y == j}
+  				if eye and eye.used?(role)
+  				  count += 1
+  				else
+  				  count = 0
+  				end
+
+  			  if count >= 5
+  				  win_exit!
+  			  end
+				end
+
+			  if j == 1
+				  break
+				end
+
+  			i += 1
+  			j -= 1
+			end
+		end
+
+		@row_number.downto(5).each do |j|
+		  i = @row_number 
+		  count = 0
+		  while true 
+			  begin
+  		  	eye = @eyes[role].find{|e| e.x == i and e.y == j}
+  				if eye and eye.used?(role)
+  				  count += 1
+  				else
+  				  count = 0
+  				end
+
+  			  if count >= 5
+  				  win_exit!
+  			  end
+				end
+
+			  if j >= @row_number
+				  break
+				end
+
+  			i -= 1
+  			j += 1
+			end
+		end
+
+	end
+
+end
+
 if __FILE__ == $0
-  server = ChatServer.new
-  server.start(4444)
+  wuziqi = Wuziqi.new
+
+  ChatServer.new(4444).run_acceptor do |message|
+	  puts "in block. message: %s" % message
+	end
 end
 
 

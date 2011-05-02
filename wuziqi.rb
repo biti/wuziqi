@@ -61,15 +61,100 @@ class Canvas
 			puts
 		end
 
-	  if win?
-	    win_exit!
-		end
+	  win?
 	end
 
+	# 思路：寻找有没有连续的5个棋子。20个行，20个列，还有斜行24个，共找64次
 	def win?
-	  false
+
+	  # 行
+   	(1..20).each do |i|
+		  count = 0
+		  (1..20).each do |j|
+			  eye = @eyes.find{|e| e.x == i and e.y == j}
+				if eye and eye.used?(@role)
+				  count += 1
+				else
+				  count = 0
+				end
+
+			  if count >= 5
+				  win_exit!
+			  end
+			end
+		end
+		   
+	  # 列
+  	(1..20).each do |j|
+		  count = 0
+		  (1..20).each do |i|
+			  eye = @eyes.find{|e| e.x == i and e.y == j}
+				if eye and eye.used?(@role)
+				  count += 1
+				else
+				  count = 0
+				end
+
+			  if count >= 5
+				  win_exit!
+			  end
+			end
+		end
+		
+		(5..20).each do |j|
+		  i = 1 
+		  count = 0
+		  while true 
+			  begin
+  		  	eye = @eyes.find{|e| e.x == i and e.y == j}
+  				if eye and eye.used?(@role)
+  				  count += 1
+  				else
+  				  count = 0
+  				end
+
+  			  if count >= 5
+  				  win_exit!
+  			  end
+				end
+
+			  if j == 1
+				  break
+				end
+
+  			i += 1
+  			j -= 1
+			end
+		end
+
+		@row_number.downto(5).each do |j|
+		  i = @row_number 
+		  count = 0
+		  while true 
+			  begin
+  		  	eye = @eyes.find{|e| e.x == i and e.y == j}
+  				if eye and eye.used?(@role)
+  				  count += 1
+  				else
+  				  count = 0
+  				end
+
+  			  if count >= 5
+  				  win_exit!
+  			  end
+				end
+
+			  if j >= @row_number
+				  break
+				end
+
+  			i -= 1
+  			j += 1
+			end
+		end
+
 	end
-	
+
 	def win_exit!
 	  puts "-----#{@role} win!-----"
 	  exit
@@ -81,12 +166,7 @@ if __FILE__ == $0
 
 	trap("INT") { interrupted = true }
 
-  if ARGV.size == 0
-	  puts "Usage: ruby wuziqi.rb black|white" 
-	end
-
-  role = ARGV[0] == 'black' ? :B : :A
-  canvas = Canvas.new(role)
+  canvas = Canvas.new(:B)
   canvas.draw
 
   client = Client.new('localhost', 4444)
