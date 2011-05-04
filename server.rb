@@ -70,7 +70,7 @@ class WuziqiServer
     @reading.push(socket)
 
     # 为客户端分配代表符号
-		@role[socket] = @clients.size % 2 == 0 ? 'x' : '@'
+		@role[socket] = @clients.size % 2 == 0 ? 'x' : 'o'
     socket.puts("Role:%s" % @role[socket])
 
     @clients[socket] = Fiber.new do |message|
