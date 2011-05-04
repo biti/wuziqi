@@ -4,7 +4,10 @@ require './client'
 require './eye'
 
 class Canvas
+
   attr_accessor :role, :eyes
+
+	GEZI = '.'
 	
 	def initialize
 	  # 全部棋子
@@ -24,7 +27,7 @@ class Canvas
 				  print "%2d " % j
 					next
 				end
-			  print ' o '  
+			  print " %s " % GEZI  
 			end
 			puts
 		end
@@ -51,7 +54,7 @@ class Canvas
 				end
 
 				# 绘制旗格
-			  print ' o '  
+			  print " %s " % GEZI  
 			end
 			puts
 		end
