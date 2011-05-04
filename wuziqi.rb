@@ -13,8 +13,17 @@ class Canvas
 	end
 
 	def draw
-		(1..20).each do |i|
+		(0..20).each do |i|
+		  if i == 0
+		    print "   "
+			else
+		    print "%2d " % i
+			end
 		  (1..20).each do |j|
+			  if i == 0
+				  print "%2d " % j
+					next
+				end
 			  print ' o '  
 			end
 			puts
@@ -23,15 +32,26 @@ class Canvas
 
 	def redraw
 
-		(1..20).each do |i|
+		(0..20).each do |i|
+		  if i == 0
+		    print "   "
+			else
+		    print "%2d " % i
+			end
 		  (1..20).each do |j|
+			  if i == 0
+					print "%2d " % j
+					next
+				end
+
 			  # 绘制已经下的棋子
 			  if eye = @eyes.find{|e| e.x == i and e.y == j}
 				  print " #{eye.role} "
-				# 绘制旗格
-				else
-			    print ' o '  
+					next
 				end
+
+				# 绘制旗格
+			  print ' o '  
 			end
 			puts
 		end
